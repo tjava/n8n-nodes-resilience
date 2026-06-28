@@ -29,7 +29,10 @@ export class ConcurrencyGate implements INodeType {
   description: INodeTypeDescription = {
     displayName: "Concurrency Gate",
     name: "concurrencyGate",
-    icon: "file:concurrencyGate.svg",
+    icon: {
+      light: "file:concurrencyGate.svg",
+      dark: "file:concurrencyGate.dark.svg",
+    },
     group: ["transform"],
     version: 1,
     subtitle: '={{$parameter["operation"]}}',

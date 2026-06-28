@@ -21,7 +21,10 @@ export class RetryStrategy implements INodeType {
   description: INodeTypeDescription = {
     displayName: "Retry Strategy",
     name: "retryStrategy",
-    icon: "file:retryStrategy.svg",
+    icon: {
+      light: "file:retryStrategy.svg",
+      dark: "file:retryStrategy.dark.svg",
+    },
     group: ["transform"],
     version: 1,
     subtitle: '={{$parameter["strategy"]}}',

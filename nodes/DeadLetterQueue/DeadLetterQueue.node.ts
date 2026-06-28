@@ -23,7 +23,10 @@ export class DeadLetterQueue implements INodeType {
   description: INodeTypeDescription = {
     displayName: "Dead Letter Queue",
     name: "deadLetterQueue",
-    icon: "file:deadLetterQueue.svg",
+    icon: {
+      light: "file:deadLetterQueue.svg",
+      dark: "file:deadLetterQueue.dark.svg",
+    },
     group: ["transform"],
     version: 1,
     subtitle: '={{$parameter["operation"]}}',
