@@ -51,26 +51,9 @@ export class Resilience implements INodeType {
       name: "Resilience",
     },
     inputs: [NodeConnectionTypes.Main],
-    outputs: [
-      {
-        type: NodeConnectionTypes.Main,
-        displayName: "Success / Allowed / Dead Letter",
-      },
-      {
-        type: NodeConnectionTypes.Main,
-        displayName: "Retry / Blocked",
-      },
-      {
-        type: NodeConnectionTypes.Main,
-        displayName: "Exhausted",
-      },
-    ],
+    outputs:
+      '={{$parameter["resource"] === "retryStrategy" ? [{ type: "main", displayName: "Success" }, { type: "main", displayName: "Retry" }, { type: "main", displayName: "Exhausted" }] : $parameter["resource"] === "concurrencyGate" ? [{ type: "main", displayName: "Allowed" }, { type: "main", displayName: "Blocked" }] : [{ type: "main" }]}}',
     usableAsTool: true,
-    outputNames: [
-      "Success / Allowed / Dead Letter",
-      "Retry / Blocked",
-      "Exhausted",
-    ],
     properties: [
       {
         displayName: "Resource",
@@ -574,11 +557,10 @@ export class Resilience implements INodeType {
   };
 
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+    let resource: ResilienceResource = "retryStrategy";
+
     try {
-      const resource = this.getNodeParameter(
-        "resource",
-        0,
-      ) as ResilienceResource;
+      resource = this.getNodeParameter("resource", 0) as ResilienceResource;
 
       if (resource === "retryStrategy") {
         return executeRetryStrategy.call(this);
@@ -594,11 +576,20 @@ export class Resilience implements INodeType {
         error instanceof Error ? error.message : "Unknown resilience error";
 
       if (this.continueOnFail()) {
-        return [
-          [{ json: { error: message }, pairedItem: { item: 0 } }],
-          [],
-          [],
-        ];
+        const errorItem = {
+          json: { error: message },
+          pairedItem: { item: 0 },
+        };
+
+        if (resource === "concurrencyGate") {
+          return [[], [errorItem]];
+        }
+
+        if (resource === "deadLetterQueue") {
+          return [[errorItem]];
+        }
+
+        return [[], [], [errorItem]];
       }
 
       throw new NodeOperationError(this.getNode(), message, { itemIndex: 0 });
@@ -896,7 +887,7 @@ async function executeConcurrencyGate(
     }
   }
 
-  return [allowedItems, blockedItems, []];
+  return [allowedItems, blockedItems];
 }
 
 async function executeDeadLetterQueue(
@@ -997,5 +988,5 @@ async function executeDeadLetterQueue(
     }
   }
 
-  return [returnData, [], []];
+  return [returnData];
 }

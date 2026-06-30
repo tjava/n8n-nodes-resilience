@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-resilience",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "n8n community nodes for retry decisions, concurrency control, and dead-letter handling",
   "keywords": [
     "n8n-community-node-package",
