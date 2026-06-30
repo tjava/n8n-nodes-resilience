@@ -2,7 +2,7 @@
 
 Production-grade resilience utilities for n8n workflows.
 
-This community node package helps workflow builders make unreliable integrations easier to manage. The nodes inspect incoming item data, add structured metadata, and route items so the rest of the workflow can handle retries, circuit breaking, concurrency limits, and dead-letter handling with regular n8n nodes.
+This community node package helps workflow builders make unreliable integrations easier to manage. The Resilience node inspects incoming item data, adds structured metadata, and routes items so the rest of the workflow can handle retries, concurrency limits, and dead-letter handling with regular n8n nodes.
 
 ## Installation
 
@@ -12,25 +12,29 @@ Follow the [n8n community node installation guide](https://docs.n8n.io/integrati
 npm install n8n-nodes-resilience
 ```
 
-## Nodes
+## Node
 
-- **Retry Strategy**: Decide whether an item should continue, retry, or go to an exhausted failure path.
-- **Concurrency Gate**: Limit how many executions/items can enter a protected section at once.
-- **Dead Letter Queue**: Wrap failed items in a clean dead-letter payload for storage or replay.
+This package registers one regular n8n node: **Resilience**.
+
+Resources and operations:
+
+- **Retry Strategy**: Evaluate
+- **Concurrency Gate**: Acquire, Release, Inspect, Force Release
+- **Dead Letter Queue**: Format Failed Item
 
 ## Retry Strategy
 
-Use this node after a risky operation such as an HTTP Request node.
+Use the **Retry Strategy** resource after a risky operation such as an HTTP Request node.
 
 ```text
 HTTP Request
-  -> Retry Strategy
+  -> Resilience (Retry Strategy: Evaluate)
   -> output 1 Success / Continue
   -> output 2 Retry -> Wait -> loop back to HTTP Request
-  -> output 3 Exhausted -> Dead Letter Queue
+  -> output 3 Exhausted -> Resilience (Dead Letter Queue: Format Failed Item)
 ```
 
-The Retry Strategy node does not sleep internally. It calculates `__retry.delaySeconds` and routes the item. Use an n8n Wait node on the Retry output to perform the actual delay before looping back to the risky operation.
+Retry Strategy does not sleep internally. It calculates `__retry.delaySeconds` and routes the item. Use an n8n Wait node on the Retry output to perform the actual delay before looping back to the risky operation.
 
 Metadata added to each item:
 
@@ -52,14 +56,14 @@ Default retryable status codes are `408,429,500,502,503,504`. Default permanent 
 
 ## Concurrency Gate
 
-Use Concurrency Gate to protect a section that should only have a limited number of active items/executions.
+Use the **Concurrency Gate** resource to protect a section that should only have a limited number of active items/executions.
 
 ```text
-Concurrency Gate (Acquire)
+Resilience (Concurrency Gate: Acquire)
   -> Acquired / Allowed -> protected work
   -> Blocked -> wait, retry, or skip
 
-protected work -> Concurrency Gate (Release)
+protected work -> Resilience (Concurrency Gate: Release)
 ```
 
 Acquire creates a lock with a TTL and outputs `__concurrencyGate.lockId`. Release can use that lock ID from `__concurrencyGate.lockId`, or an explicit Lock ID parameter.
@@ -84,11 +88,11 @@ Metadata added to each item:
 
 ## Dead Letter Queue
 
-Use Dead Letter Queue at permanent failure paths, especially after Retry Strategy's Exhausted output.
+Use the **Dead Letter Queue** resource at permanent failure paths, especially after Retry Strategy's Exhausted output.
 
 ```text
-Retry Strategy (Exhausted)
-  -> Dead Letter Queue
+Resilience (Retry Strategy: Exhausted)
+  -> Resilience (Dead Letter Queue: Format Failed Item)
   -> Google Sheets / Postgres / Slack / Notion / S3 / Webhook / database node
 ```
 
@@ -116,15 +120,15 @@ Example output:
 ### HTTP Retry With Dead Letter
 
 1. HTTP Request calls an external API.
-2. Retry Strategy checks `statusCode` and `message`.
+2. Resilience with Retry Strategy evaluates `statusCode` and `message`.
 3. Retry output goes to Wait using `{{$json.__retry.delaySeconds}}`.
 4. Wait loops back to HTTP Request.
-5. Exhausted output goes to Dead Letter Queue.
-6. Dead Letter Queue connects to a storage or alerting node.
+5. Exhausted output goes to Resilience with Dead Letter Queue.
+6. The dead-letter output connects to a storage or alerting node.
 
 ### Concurrency-Limited Section
 
-1. Concurrency Gate Acquire uses key `={{$json.customerId}}`.
+1. Resilience with Concurrency Gate Acquire uses key `={{$json.customerId}}`.
 2. Acquired output does the protected work.
 3. The final node releases `{{$json.__concurrencyGate.lockId}}`.
 4. Blocked output waits, retries, or skips based on workflow needs.

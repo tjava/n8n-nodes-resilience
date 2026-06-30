@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Dead Letter Queue">
-  <rect width="64" height="64" rx="14" fill="#B197FC"/>
-  <path d="M16 22h32v24H16z" fill="none" stroke="#0B1220" stroke-width="5" stroke-linejoin="round"/>
-  <path d="m17 24 15 12 15-12" fill="none" stroke="#0B1220" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M42 14v10M47 19H37" fill="none" stroke="#0B1220" stroke-width="4" stroke-linecap="round"/>
-</svg>

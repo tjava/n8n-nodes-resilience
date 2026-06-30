@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-resilience",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "n8n community nodes for retry decisions, concurrency control, and dead-letter handling",
   "keywords": [
     "n8n-community-node-package",
@@ -20,9 +20,9 @@
     "type": "git",
     "url": "git+https://github.com/tjava/n8n-nodes-resilience.git"
   },
-  "main": "dist/nodes/RetryStrategy/RetryStrategy.node.js",
+  "main": "dist/nodes/Resilience/Resilience.node.js",
   "scripts": {
-    "build": "tsc && node scripts/copy-static-assets.mjs",
+    "build": "node scripts/clean-dist.mjs && tsc && node scripts/copy-static-assets.mjs",
     "dev": "tsc --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -39,9 +39,7 @@
     "n8nNodesApiVersion": 1,
     "credentials": [],
     "nodes": [
-      "dist/nodes/RetryStrategy/RetryStrategy.node.js",
-      "dist/nodes/ConcurrencyGate/ConcurrencyGate.node.js",
-      "dist/nodes/DeadLetterQueue/DeadLetterQueue.node.js"
+      "dist/nodes/Resilience/Resilience.node.js"
     ]
   },
   "devDependencies": {
